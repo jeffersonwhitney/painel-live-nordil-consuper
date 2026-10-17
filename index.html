@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Biblioteca de Confetes -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
             --azul-nordil: #0072B9;
@@ -36,7 +38,7 @@
             border: 1px solid #374151;
         }
 
-        .tabela-dados { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.75rem; }
+        .tabela-dados { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.75rem; table-layout: fixed; }
         .tabela-dados th {
             background-color: var(--azul-nordil); color: white; font-weight: 700;
             padding: 8px; position: sticky; top: 0; z-index: 10; text-transform: uppercase;
@@ -57,24 +59,25 @@
 
         .fonte-titulo { font-weight: 900; letter-spacing: 1px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
 
-        .caixa-central-inferior {
-            background: white; 
-            border: 3px solid black;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.5); 
-            color: black;
+        /* FUNDOS COM GRID DE TECNOLOGIA */
+        .bg-tech-blue {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3133D1 100%);
+            position: relative;
         }
-
-        .donut-chart {
-            border-radius: 50%;
-            background: conic-gradient(#00C853 0% var(--porcentagem), #E5E7EB var(--porcentagem) 100%);
-            display: flex; align-items: center; justify-content: center; position: relative;
+        .bg-tech-blue::before {
+            content: ''; position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 30px 30px; pointer-events: none;
         }
-
-        .donut-inner {
-            background-color: white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; 
-            color: black;
+        
+        .bg-tech-green {
+            background: linear-gradient(135deg, #14532d 0%, #55793F 100%);
+            position: relative;
+        }
+        .bg-tech-green::before {
+            content: ''; position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 30px 30px; pointer-events: none;
         }
 
         @keyframes pulsarLogo {
@@ -82,16 +85,16 @@
             50% { transform: scale(1.05); }
             100% { transform: scale(0.95); }
         }
-        .pulsar-1 { animation: pulsarLogo 4s ease-in-out infinite; }
-        .pulsar-2 { animation: pulsarLogo 4s ease-in-out infinite; animation-delay: -2s; }
+        .pulsar-1 { animation: pulsarLogo 4s ease-in-out infinite; transform-origin: center; }
+        .pulsar-2 { animation: pulsarLogo 4s ease-in-out infinite; animation-delay: -2s; transform-origin: center; }
 
         @keyframes balancoLogo {
-            0% { transform: rotate(-6deg); }
-            100% { transform: rotate(6deg); }
+            0% { transform: translateY(-50%) rotate(-6deg); }
+            100% { transform: translateY(-50%) rotate(6deg); }
         }
         .balanco-logo {
             animation: balancoLogo 4s ease-in-out infinite alternate;
-            filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.5));
+            filter: drop-shadow(0px 8px 8px rgba(0,0,0,0.6));
         }
 
         .notification {
@@ -104,10 +107,15 @@
         .notification.error { background-color: #DC2626; }
     </style>
 </head>
-<body class="flex flex-col landscape:flex-row min-h-screen w-full overflow-x-hidden">
+<body class="flex flex-col landscape:flex-row min-h-screen w-full overflow-x-hidden relative">
 
-    <!-- LADO ESQUERDO (Desktop) / INFERIOR (Mobile): TABELAS -->
-    <div class="order-3 landscape:order-1 w-full landscape:w-2/5 h-auto landscape:h-screen bg-gray-900 landscape:border-r-2 border-t-2 landscape:border-t-0 border-gray-700 flex flex-col p-4 z-30 shadow-xl">
+    <!-- BOTÃO DE CONFETE -->
+    <button id="btn-confetti" onclick="toggleConfetti()" class="fixed bottom-4 right-4 z-50 bg-gray-800 border border-gray-600 text-white p-3 rounded-full shadow-2xl hover:scale-110 transition-transform focus:outline-none" title="Ativar Confetes">
+        🎉
+    </button>
+
+    <!-- LADO ESQUERDO (TABELAS) -->
+    <div class="order-3 landscape:order-1 w-full landscape:w-[55%] h-auto landscape:h-screen bg-gray-900 landscape:border-r-4 border-t-4 landscape:border-t-0 border-black flex flex-col p-4 z-30 shadow-xl">
         
         <!-- Cabeçalho -->
         <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-800">
@@ -122,20 +130,31 @@
             </div>
         </div>
 
+        <!-- Barra de Controle de Visão (Supervisores / Fornecedores) -->
+        <div class="flex items-center justify-between mb-3 px-1">
+            <span id="badge-visao" class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider shadow">SUPERVISORES</span>
+            
+            <button id="btn-autoswitch" onclick="toggleAutoSwitch()" class="flex items-center gap-1.5 bg-gray-700 hover:bg-gray-600 text-white text-[10px] px-3 py-1.5 rounded transition-colors border border-gray-500 shadow-md">
+                <svg id="icone-autoswitch" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <span>Auto-Troca: OFF</span>
+            </button>
+        </div>
+
         <!-- Tabelas Container -->
-        <div class="flex flex-col gap-6 landscape:gap-3 flex-grow landscape:overflow-hidden landscape:min-h-0">
+        <div class="flex flex-col landscape:flex-row gap-6 landscape:gap-4 flex-grow landscape:overflow-hidden landscape:min-h-0">
             
             <!-- Bloco Tabela JP -->
             <div class="flex flex-col flex-none landscape:flex-1 h-[400px] landscape:h-auto landscape:min-h-0">
                 <h2 class="text-xs font-bold bg-blue-800 text-white p-1.5 text-center rounded-t border border-blue-800 shrink-0">JOÃO PESSOA</h2>
-                
                 <div class="tabela-container rounded-t-none flex-1 overflow-y-auto min-h-0">
                     <table class="tabela-dados">
                         <thead>
                             <tr>
-                                <th class="w-1/4">CÓD</th>
-                                <th class="w-2/4">SUPERVISOR</th>
-                                <th class="w-1/4 text-right">TRANSMISSÃO</th>
+                                <th class="w-2/12">CÓD</th>
+                                <th id="th-nome-jp" class="w-6/12">SUPERVISOR</th>
+                                <th class="w-4/12 text-right">TRANSMISSÃO</th>
                             </tr>
                         </thead>
                         <tbody id="jp-table-body">
@@ -143,24 +162,18 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <div class="mt-2 flex justify-between items-center px-1 shrink-0 pb-1">
-                    <span class="text-xs font-bold text-gray-400 uppercase">Subtotal JP</span>
-                    <div id="subtotal-jp" class="total-box-lateral w-1/2">R$ 0,00</div>
-                </div>
             </div>
 
             <!-- Bloco Tabela Patos -->
             <div class="flex flex-col flex-none landscape:flex-1 h-[400px] landscape:h-auto landscape:min-h-0">
                 <h2 class="text-xs font-bold bg-blue-800 text-white p-1.5 text-center rounded-t border border-blue-800 shrink-0">PATOS</h2>
-                
                 <div class="tabela-container rounded-t-none flex-1 overflow-y-auto min-h-0">
                     <table class="tabela-dados">
                         <thead>
                             <tr>
-                                <th class="w-1/4">CÓD</th>
-                                <th class="w-2/4">SUPERVISOR</th>
-                                <th class="w-1/4 text-right">TRANSMISSÃO</th>
+                                <th class="w-2/12">CÓD</th>
+                                <th id="th-nome-pt" class="w-6/12">SUPERVISOR</th>
+                                <th class="w-4/12 text-right">TRANSMISSÃO</th>
                             </tr>
                         </thead>
                         <tbody id="pt-table-body">
@@ -168,126 +181,122 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <div class="mt-2 flex justify-between items-center px-1 shrink-0 pb-2">
-                    <span class="text-xs font-bold text-gray-400 uppercase">Subtotal PT</span>
-                    <div id="subtotal-pt" class="total-box-lateral w-1/2">R$ 0,00</div>
-                </div>
             </div>
             
         </div>
     </div>
 
-    <!-- LADO DIREITO (Desktop) / SUPERIOR (Mobile): PAINEL VISUAL -->
-    <div class="order-1 landscape:order-2 w-full landscape:w-3/5 h-auto landscape:h-screen flex flex-col landscape:flex-row relative">
+    <!-- LADO DIREITO (PAINEL VISUAL) -->
+    <div class="order-1 landscape:order-2 w-full landscape:w-[45%] h-auto landscape:h-screen flex flex-col relative">
         
-        <!-- OVERLAY ABSOLUTO PARA OS ELEMENTOS CENTRAIS -->
-        <div class="absolute inset-0 pointer-events-none z-20">
+        <!-- OVERLAY ABSOLUTO PARA O VS E A BARRA DE ATINGIMENTO -->
+        <div class="absolute inset-0 z-30 pointer-events-none flex items-center">
             
-            <!-- VS Logo -->
-            <div class="absolute w-full flex justify-center top-1/2 -translate-y-1/2 landscape:top-[30px] landscape:translate-y-0 pr-32 landscape:pr-0">
-                <img id="img-vs" src="" alt="VS" class="w-20 landscape:w-[250px] pointer-events-auto balanco-logo">
+            <!-- VS Logo (Fixo à esquerda do container direito) -->
+            <div class="absolute left-4 landscape:left-8 top-1/2 pointer-events-auto">
+                <img id="img-vs" src="" alt="VS" class="w-20 landscape:w-[160px] balanco-logo">
             </div>
 
-            <!-- Atingimento Box -->
-            <div class="absolute w-full flex justify-center top-1/2 -translate-y-1/2 landscape:top-auto landscape:bottom-[15px] landscape:translate-y-0 pl-32 landscape:pl-0">
-                <div class="caixa-central-inferior p-2 landscape:p-[12px_30px] rounded flex flex-row items-center gap-2 landscape:gap-[25px] pointer-events-auto">
-                    <div class="flex flex-col items-center">
-                        <img id="logo-nordil-rodape" src="" alt="Nordil" class="h-5 landscape:h-8 mb-0.5">
-                        <p class="font-black text-[9px] landscape:text-lg whitespace-nowrap">2025 vs. 2026</p>
-                    </div>
-                    
-                    <div class="h-12 landscape:h-20 w-px bg-gray-300 mx-0.5 landscape:mx-1"></div>
-                    
-                    <div class="flex flex-col items-center">
-                        <div id="grafico-rosca" class="donut-chart w-10 h-10 landscape:w-[100px] landscape:h-[100px]" style="--porcentagem: 0%;">
-                            <div class="donut-inner w-7 h-7 landscape:w-[75px] landscape:h-[75px] text-[9px] landscape:text-2xl" id="val-porcentagem">0%</div>
-                        </div>
-                        <span class="text-[7px] landscape:text-xs font-bold mt-0.5 landscape:mt-1 text-gray-500 uppercase">Atingimento</span>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- LADO ATUAL (2026) -->
-        <div class="w-full landscape:w-1/2 h-[45vh] landscape:h-full bg-[#3133D1] border-b-[3px] landscape:border-b-0 landscape:border-r-[3px] border-black flex flex-row landscape:flex-col items-center justify-between landscape:justify-center p-4 relative pb-10 landscape:pb-4">
-            
-            <!-- Imagem Container -->
-            <div class="w-1/3 landscape:w-auto landscape:absolute landscape:left-6 landscape:top-1/2 landscape:-translate-y-1/2 flex justify-center">
-                <img id="img-2026" src="" alt="Arte Atual" class="max-h-[35vh] landscape:max-h-[25vh] object-contain pulsar-1">
-            </div>
-            
-            <!-- Textos Container -->
-            <div class="w-2/3 landscape:w-52 landscape:ml-auto landscape:mr-12 text-center z-10 pl-2 landscape:pl-0">
-                <h1 class="text-2xl landscape:text-3xl fonte-titulo mb-1 text-white">2026</h1>
-                <h2 id="data-2026" class="text-sm landscape:text-xl font-bold mb-4 text-white">DIA ATUAL</h2>
+            <!-- Barra de Atingimento (Horizontal preenchendo o resto da tela) -->
+            <div class="absolute top-1/2 -translate-y-1/2 left-[100px] landscape:left-[200px] right-4 landscape:right-8 pointer-events-auto flex flex-row items-center gap-3 landscape:gap-4 bg-gray-900/70 p-2 landscape:p-3 rounded-xl backdrop-blur-md border border-white/10 shadow-xl">
                 
-                <div class="flex flex-col gap-2 landscape:gap-3 mb-4">
-                    <div class="w-full">
-                        <p class="font-bold text-[9px] landscape:text-[10px] mb-1 uppercase tracking-wider text-white text-left">J. PESSOA</p>
-                        <div class="valor-box w-full flex justify-between px-2 landscape:px-[10px]">
-                            <span class="text-[10px] landscape:text-xs mt-1">R$</span>
-                            <span id="val-jp-2026" class="text-sm landscape:text-base">0,00</span>
-                        </div>
-                    </div>
-                    <div class="w-full">
-                        <p class="font-bold text-[9px] landscape:text-[10px] mb-1 uppercase tracking-wider text-white text-left">PATOS</p>
-                        <div class="valor-box w-full flex justify-between px-2 landscape:px-[10px]">
-                            <span class="text-[10px] landscape:text-xs mt-1">R$</span>
-                            <span id="val-pt-2026" class="text-sm landscape:text-base">0,00</span>
-                        </div>
-                    </div>
-                </div>
+                <!-- Texto Menor à Esquerda -->
+                <span class="text-[8px] landscape:text-xs font-black text-white uppercase tracking-widest drop-shadow-md shrink-0">
+                    Atingimento
+                </span>
                 
-                <h1 class="text-lg landscape:text-xl fonte-titulo mt-4 landscape:mt-6 mb-1 landscape:mb-2 text-white">TOTAL 2026</h1>
-                <div class="valor-box w-full text-center flex justify-center py-1 landscape:py-2 bg-yellow-400 border border-yellow-500">
-                    <span class="mr-1 font-bold mt-1 text-[10px] landscape:text-xs">R$</span>
-                    <span id="total-2026" class="font-black text-base landscape:text-lg">0,00</span>
+                <!-- Container Fundo da Barra -->
+                <div class="flex-1 h-6 landscape:h-8 bg-[#111827] rounded-full overflow-hidden shadow-[inset_0_2px_4px_rgba(0,0,0,0.8)] border border-white/5 relative">
+                    
+                    <!-- Preenchimento Colorido da Barra -->
+                    <div id="barra-preenchimento" class="h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%; background-color: #00C853;"></div>
+                    
+                    <!-- Texto da Porcentagem Centralizado DENTRO da barra inteira -->
+                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                        <span id="val-porcentagem" class="text-xs landscape:text-xl font-black text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] tracking-wider">0%</span>
+                    </div>
                 </div>
+
             </div>
         </div>
 
-        <!-- LADO HISTÓRICO (2025) -->
-        <div class="w-full landscape:w-1/2 h-[45vh] landscape:h-full bg-[#55793F] flex flex-row landscape:flex-col items-center justify-between landscape:justify-center p-4 relative pt-10 landscape:pt-4">
+        <!-- METADE SUPERIOR (2026) -->
+        <div class="w-full h-[45vh] landscape:h-1/2 bg-tech-blue border-b-4 border-black flex flex-row items-center justify-around p-4 pb-12 landscape:pb-8 relative overflow-hidden">
             
-            <!-- Textos Container -->
-            <div class="w-2/3 landscape:w-52 landscape:mr-auto landscape:ml-12 text-center z-10 pr-2 landscape:pr-0">
-                <h1 class="text-2xl landscape:text-3xl fonte-titulo mb-1 text-white">2025</h1>
-                <h2 class="text-sm landscape:text-xl font-bold mb-4 text-white">14/10/2025</h2>
+            <!-- Imagem 2026 -->
+            <div class="w-1/3 flex justify-center z-10">
+                <img id="img-2026" src="" alt="Arte Atual" class="max-h-[30vh] landscape:max-h-[40vh] object-contain pulsar-1">
+            </div>
+            
+            <!-- Textos 2026 (Centralizado) -->
+            <div class="w-2/3 landscape:w-1/2 text-center z-10 pr-2">
+                <h1 class="text-2xl landscape:text-4xl fonte-titulo mb-1 text-white drop-shadow-lg">2026</h1>
+                <h2 id="data-2026" class="text-sm landscape:text-lg font-bold mb-4 text-white">DIA ATUAL</h2>
                 
-                <div class="flex flex-col gap-2 landscape:gap-3 mb-4">
+                <div class="flex flex-col gap-2 mb-4">
                     <div class="w-full">
-                        <p class="font-bold text-[9px] landscape:text-[10px] mb-1 uppercase tracking-wider text-white text-left">J. PESSOA</p>
-                        <div class="valor-box w-full flex justify-between px-2 landscape:px-[10px]">
-                            <span class="text-[10px] landscape:text-xs mt-1">R$</span>
-                            <span id="val-jp-2025" class="text-sm landscape:text-base">1.113.405,01</span>
+                        <p class="font-bold text-[9px] landscape:text-xs mb-1 uppercase tracking-wider text-white text-left">J. PESSOA</p>
+                        <div class="valor-box w-full flex justify-between px-2 landscape:px-3">
+                            <span class="text-[10px] landscape:text-sm mt-1">R$</span>
+                            <span id="val-jp-2026" class="text-sm landscape:text-lg">0,00</span>
                         </div>
                     </div>
                     <div class="w-full">
-                        <p class="font-bold text-[9px] landscape:text-[10px] mb-1 uppercase tracking-wider text-white text-left">PATOS</p>
-                        <div class="valor-box w-full flex justify-between px-2 landscape:px-[10px]">
-                            <span class="text-[10px] landscape:text-xs mt-1">R$</span>
-                            <span id="val-pt-2025" class="text-sm landscape:text-base">571.023,90</span>
+                        <p class="font-bold text-[9px] landscape:text-xs mb-1 uppercase tracking-wider text-white text-left">PATOS</p>
+                        <div class="valor-box w-full flex justify-between px-2 landscape:px-3">
+                            <span class="text-[10px] landscape:text-sm mt-1">R$</span>
+                            <span id="val-pt-2026" class="text-sm landscape:text-lg">0,00</span>
                         </div>
                     </div>
                 </div>
                 
-                <h1 class="text-lg landscape:text-xl fonte-titulo mt-4 landscape:mt-6 mb-1 landscape:mb-2 text-white">TOTAL 2025</h1>
-                <div class="valor-box w-full text-center flex justify-center py-1 landscape:py-2">
-                    <span class="mr-1 font-bold mt-1 text-[10px] landscape:text-xs">R$</span>
-                    <span id="total-2025" class="font-black text-base landscape:text-lg">1.684.428,91</span>
+                <h1 class="text-lg landscape:text-2xl fonte-titulo mt-4 mb-2 text-white">TOTAL 2026</h1>
+                <div class="valor-box w-full text-center flex justify-center py-2 bg-yellow-400 border border-yellow-500">
+                    <span class="mr-1 font-bold mt-1 text-[10px] landscape:text-sm">R$</span>
+                    <span id="total-2026" class="font-black text-base landscape:text-xl">0,00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- METADE INFERIOR (2025) -->
+        <div class="w-full h-[45vh] landscape:h-1/2 bg-tech-green flex flex-row items-center justify-around p-4 pt-12 landscape:pt-8 relative overflow-hidden">
+            
+            <!-- Textos 2025 (Centralizado) -->
+            <div class="w-2/3 landscape:w-1/2 text-center z-10 pl-2">
+                <h1 class="text-2xl landscape:text-4xl fonte-titulo mb-1 text-white drop-shadow-lg">2025</h1>
+                <h2 class="text-sm landscape:text-lg font-bold mb-4 text-white">14/10/2025</h2>
+                
+                <div class="flex flex-col gap-2 mb-4">
+                    <div class="w-full">
+                        <p class="font-bold text-[9px] landscape:text-xs mb-1 uppercase tracking-wider text-white text-left">J. PESSOA</p>
+                        <div class="valor-box w-full flex justify-between px-2 landscape:px-3">
+                            <span class="text-[10px] landscape:text-sm mt-1">R$</span>
+                            <span id="val-jp-2025" class="text-sm landscape:text-lg">1.113.405,01</span>
+                        </div>
+                    </div>
+                    <div class="w-full">
+                        <p class="font-bold text-[9px] landscape:text-xs mb-1 uppercase tracking-wider text-white text-left">PATOS</p>
+                        <div class="valor-box w-full flex justify-between px-2 landscape:px-3">
+                            <span class="text-[10px] landscape:text-sm mt-1">R$</span>
+                            <span id="val-pt-2025" class="text-sm landscape:text-lg">571.023,90</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h1 class="text-lg landscape:text-2xl fonte-titulo mt-4 mb-2 text-white">TOTAL 2025</h1>
+                <div class="valor-box w-full text-center flex justify-center py-2">
+                    <span class="mr-1 font-bold mt-1 text-[10px] landscape:text-sm">R$</span>
+                    <span id="total-2025" class="font-black text-base landscape:text-xl">1.684.428,91</span>
                 </div>
             </div>
 
-            <!-- Imagem Container -->
-            <div class="w-1/3 landscape:w-auto landscape:absolute landscape:right-6 landscape:top-1/2 landscape:-translate-y-1/2 flex justify-center">
-                <img id="img-2025" src="" alt="Arte Histórico" class="max-h-[35vh] landscape:max-h-[25vh] object-contain pulsar-2">
+            <!-- Imagem 2025 -->
+            <div class="w-1/3 flex justify-center z-10">
+                <img id="img-2025" src="" alt="Arte Histórico" class="max-h-[30vh] landscape:max-h-[40vh] object-contain pulsar-2">
             </div>
         </div>
     </div>
 
-    <!-- Notificação -->
     <div id="notification" class="notification"></div>
 
     <script>
@@ -297,9 +306,12 @@
         
         const TEMPO_ATUALIZACAO_SEGUNDOS = 300; 
         
+        // ADICIONE OS LINKS DOS FORNECEDORES AQUI TAMBÉM (FORMATO CSV)
         const LINKS_PLANILHAS = {
-            jp: 'https://docs.google.com/spreadsheets/d/1Md8FmjMxuPWi7_kCk3tAcZkDg1NKbb2P/export?format=csv',
-            pt: 'https://docs.google.com/spreadsheets/d/1XG1u9Awi9yG8_0DUhfhJgZa8Xa8P2Bwu/export?format=csv'
+            jp_supervisores: 'https://docs.google.com/spreadsheets/d/1Md8FmjMxuPWi7_kCk3tAcZkDg1NKbb2P/export?format=csv',
+            pt_supervisores: 'https://docs.google.com/spreadsheets/d/1XG1u9Awi9yG8_0DUhfhJgZa8Xa8P2Bwu/export?format=csv',
+            jp_fornecedores: 'COLE_O_LINK_DO_CSV_JP_FORNECEDORES_AQUI',
+            pt_fornecedores: 'COLE_O_LINK_DO_CSV_PT_FORNECEDORES_AQUI'
         };
 
         const LINKS_IMAGENS = {
@@ -315,14 +327,123 @@
         document.getElementById('img-2025').src = LINKS_IMAGENS.imagem2025;
         document.getElementById('img-vs').src = LINKS_IMAGENS.iconeVS;
         document.getElementById('logo-nordil-header').src = LINKS_IMAGENS.logoNordil;
-        document.getElementById('logo-nordil-rodape').src = LINKS_IMAGENS.logoNordil;
 
-        let dadosJP = [];
-        let dadosPT = [];
+        // Estrutura de armazenamento duplo
+        let dados = {
+            supervisores: { jp: [], pt: [] },
+            fornecedores: { jp: [], pt: [] }
+        };
+
         let tempoRestante = TEMPO_ATUALIZACAO_SEGUNDOS;
+        
+        // Controles de Visão e Confetes
+        let visaoAtual = 'supervisores'; 
+        let autoTrocaAtiva = false;
+        let autoTrocaIntervalo;
+        let confettiAtivo = false;
+        let confettiIntervalo;
 
         // =========================================================================
-        // 2. LÓGICA DE FORMATAÇÃO E PROCESSAMENTO
+        // 2. LÓGICA DE INTERAÇÃO (BOTOES)
+        // =========================================================================
+
+        function toggleConfetti() {
+            confettiAtivo = !confettiAtivo;
+            const btn = document.getElementById('btn-confetti');
+            
+            if (confettiAtivo) {
+                btn.classList.add('bg-green-600', 'border-green-400');
+                btn.classList.remove('bg-gray-800', 'border-gray-600');
+                
+                // Dispara o primeiro confete imediatamente
+                dispararConfete();
+                // Programa para a cada 5 segundos
+                confettiIntervalo = setInterval(dispararConfete, 5000);
+                showNotification("Modo Festa: Ativado!", "success");
+            } else {
+                btn.classList.remove('bg-green-600', 'border-green-400');
+                btn.classList.add('bg-gray-800', 'border-gray-600');
+                
+                clearInterval(confettiIntervalo);
+                showNotification("Modo Festa: Desativado.", "success");
+            }
+        }
+
+        function dispararConfete() {
+            // Cores personalizadas: Azul Nordil, Amarelo, Vermelho, Branco, Verde do Atingimento
+            const coresNordil = ['#0072B9', '#FFD123', '#F23035', '#ffffff', '#00C853']; 
+
+            // Canhão do Canto Inferior Esquerdo (Aponta 60 graus pra cima/direita)
+            confetti({
+                particleCount: 200,
+                angle: 60,
+                spread: 80,
+                origin: { x: 0, y: 1 },
+                startVelocity: 65,
+                zIndex: 9999,
+                colors: coresNordil
+            });
+
+            // Canhão do Canto Inferior Direito (Aponta 120 graus pra cima/esquerda)
+            confetti({
+                particleCount: 200,
+                angle: 120,
+                spread: 80,
+                origin: { x: 1, y: 1 },
+                startVelocity: 65,
+                zIndex: 9999,
+                colors: coresNordil
+            });
+        }
+
+        function toggleAutoSwitch() {
+            autoTrocaAtiva = !autoTrocaAtiva;
+            const btn = document.getElementById('btn-autoswitch');
+            const icone = document.getElementById('icone-autoswitch');
+            
+            if (autoTrocaAtiva) {
+                btn.classList.add('bg-blue-600', 'border-blue-400');
+                btn.classList.remove('bg-gray-700', 'border-gray-500');
+                btn.querySelector('span').textContent = "Auto-Troca: ON";
+                icone.classList.add('animate-spin');
+                
+                // Força a troca na hora e repete a cada 15s
+                alternarVisao();
+                autoTrocaIntervalo = setInterval(alternarVisao, 15000);
+            } else {
+                btn.classList.remove('bg-blue-600', 'border-blue-400');
+                btn.classList.add('bg-gray-700', 'border-gray-500');
+                btn.querySelector('span').textContent = "Auto-Troca: OFF";
+                icone.classList.remove('animate-spin');
+                
+                clearInterval(autoTrocaIntervalo);
+            }
+        }
+
+        function alternarVisao() {
+            const novaVisao = visaoAtual === 'supervisores' ? 'fornecedores' : 'supervisores';
+            atualizarVisao(novaVisao);
+        }
+
+        function atualizarVisao(nova) {
+            visaoAtual = nova;
+            
+            // Troca o título do cabeçalho
+            const tituloDaColuna = visaoAtual === 'supervisores' ? 'SUPERVISOR' : 'FORNECEDOR';
+            document.getElementById('th-nome-jp').textContent = tituloDaColuna;
+            document.getElementById('th-nome-pt').textContent = tituloDaColuna;
+            document.getElementById('badge-visao').textContent = visaoAtual.toUpperCase();
+
+            // Preenche as tabelas com os dados do array correspondente
+            preencherTabela(dados[visaoAtual].jp, 'jp-table-body');
+            preencherTabela(dados[visaoAtual].pt, 'pt-table-body');
+
+            // Sincroniza o painel visual
+            sincronizarVisuais(dados[visaoAtual].jp, dados[visaoAtual].pt);
+        }
+
+        // =========================================================================
+        // 3. LÓGICA DE FORMATAÇÃO E PROCESSAMENTO
         // =========================================================================
 
         function iniciarTimer() {
@@ -353,15 +474,8 @@
             if (!valor) return 0;
             
             let strValor = String(valor).trim();
-            
-            // Se for um número negativo (contém sinal de menos)
             const isNegativo = strValor.includes('-');
-            
-            // Remove tudo que não for dígito ou vírgula
-            // Ignoramos os pontos (que no Brasil são separadores de milhar)
             strValor = strValor.replace(/[^\d,]/g, '');
-            
-            // Substitui a vírgula decimal por ponto para o JavaScript entender
             strValor = strValor.replace(',', '.');
             
             let numFinal = parseFloat(strValor);
@@ -388,7 +502,7 @@
 
         function processCSVRows(rows, prefix) {
             const result = [];
-            let supervisorIndex = -1;
+            let descricaoIndex = -1;
             const codigoIndex = 0;
             const valorIndex = 10; 
             
@@ -396,17 +510,18 @@
                 if (!rows[i]) continue;
                 for (let j = 0; j < rows[i].length; j++) {
                     const cell = String(rows[i][j] || '').toLowerCase();
-                    if (cell.includes('supervisor') || cell.includes('nome')) {
-                        supervisorIndex = j; break;
+                    // Reconhece a coluna seja pelo nome supervisor, fornecedor ou genérico 'nome'
+                    if (cell.includes('supervisor') || cell.includes('fornecedor') || cell.includes('nome')) {
+                        descricaoIndex = j; break;
                     }
                 }
-                if (supervisorIndex >= 0) break;
+                if (descricaoIndex >= 0) break;
             }
-            if (supervisorIndex < 0) supervisorIndex = 1;
+            if (descricaoIndex < 0) descricaoIndex = 1;
 
             let startRow = 0;
             for (let i = 0; i < rows.length; i++) {
-                if (rows[i] && rows[i][supervisorIndex] && rows[i].length > valorIndex && 
+                if (rows[i] && rows[i][descricaoIndex] && rows[i].length > valorIndex && 
                    (typeof rows[i][valorIndex] === 'number' || extrairValorNumerico(rows[i][valorIndex]) > 0)) {
                     startRow = i; break;
                 }
@@ -416,16 +531,16 @@
                 if (!rows[i] || rows[i].length <= valorIndex) continue;
                 
                 const codigo = rows[i][codigoIndex];
-                const supervisor = rows[i][supervisorIndex];
+                const descricao = rows[i][descricaoIndex];
                 const valorRaw = rows[i][valorIndex];
                 
-                if (!supervisor || !valorRaw) continue;
+                if (!descricao || !valorRaw) continue;
                 const transmissao = extrairValorNumerico(valorRaw);
                 
                 if (transmissao > 0) {
                     result.push({
                         codigo: codigo ? String(codigo) : `${prefix}${String(result.length + 1).padStart(3, '0')}`,
-                        supervisor: String(supervisor).trim(),
+                        descricao: String(descricao).trim(),
                         transmissao: transmissao
                     });
                 }
@@ -433,33 +548,30 @@
             return result.sort((a, b) => b.transmissao - a.transmissao);
         }
 
-        function preencherTabela(dados, tableId) {
+        function preencherTabela(listaDados, tableId) {
             const tbody = document.getElementById(tableId);
             tbody.innerHTML = '';
             
-            if (dados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4">Nenhum dado encontrado</td></tr>`;
+            if (listaDados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Nenhum dado encontrado</td></tr>`;
                 return;
             }
 
-            dados.forEach(item => {
+            listaDados.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${item.codigo}</td>
-                    <td class="font-semibold text-white">${item.supervisor}</td>
-                    <td class="text-right text-green-400 font-bold">${formatarMoedaTabela(item.transmissao)}</td>
+                    <td class="truncate" title="${item.codigo}">${item.codigo}</td>
+                    <td class="font-semibold text-white truncate max-w-0" title="${item.descricao}">${item.descricao}</td>
+                    <td class="text-right text-green-400 font-bold truncate">${formatarMoedaTabela(item.transmissao)}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function sincronizarVisuais() {
-            const totalJP = dadosJP.reduce((sum, item) => sum + item.transmissao, 0);
-            const totalPT = dadosPT.reduce((sum, item) => sum + item.transmissao, 0);
+        function sincronizarVisuais(listaJP, listaPT) {
+            const totalJP = listaJP.reduce((sum, item) => sum + item.transmissao, 0);
+            const totalPT = listaPT.reduce((sum, item) => sum + item.transmissao, 0);
             const totalGeral = totalJP + totalPT;
-
-            document.getElementById('subtotal-jp').textContent = formatarMoedaTabela(totalJP);
-            document.getElementById('subtotal-pt').textContent = formatarMoedaTabela(totalPT);
 
             document.getElementById('val-jp-2026').textContent = formatarMoeda(totalJP);
             document.getElementById('val-pt-2026').textContent = formatarMoeda(totalPT);
@@ -468,13 +580,16 @@
             const percentual = totalGeral > 0 ? (totalGeral / TOTAL_HISTORICO_2025) * 100 : 0;
             const percentualFormatado = Math.round(percentual);
             
-            let corRosca = '#00C853'; 
-            if(percentualFormatado < 50) corRosca = '#F23035';
-            else if(percentualFormatado < 90) corRosca = '#FFD123';
+            let corBarra = '#00C853'; 
+            if(percentualFormatado < 50) corBarra = '#F23035';
+            else if(percentualFormatado < 90) corBarra = '#FFD123';
             
-            const grafico = document.getElementById('grafico-rosca');
-            grafico.style.setProperty('--porcentagem', `${percentual}%`);
-            grafico.style.background = `conic-gradient(${corRosca} 0% var(--porcentagem), #E5E7EB var(--porcentagem) 100%)`;
+            const barra = document.getElementById('barra-preenchimento');
+            const larguraVisual = percentual > 100 ? 100 : percentual;
+            
+            barra.style.width = `${larguraVisual}%`;
+            barra.style.backgroundColor = corBarra;
+            barra.style.boxShadow = `0 0 12px ${corBarra}80`; 
             
             document.getElementById('val-porcentagem').textContent = `${percentualFormatado}%`;
             
@@ -482,47 +597,48 @@
         }
 
         // =========================================================================
-        // 3. REQUISIÇÕES HTTP HTTP PARA O GOOGLE SHEETS
+        // 4. REQUISIÇÕES HTTP (GOOGLE SHEETS)
         // =========================================================================
 
         async function fetchCSV(url) {
             return new Promise((resolve, reject) => {
                 Papa.parse(url, {
                     download: true,
-                    complete: function(results) {
-                        resolve(results.data);
-                    },
-                    error: function(err) {
-                        reject(err);
-                    }
+                    complete: function(results) { resolve(results.data); },
+                    error: function(err) { reject(err); }
                 });
             });
         }
 
         async function buscarDadosPlanilhas() {
             try {
-                if(LINKS_PLANILHAS.jp && LINKS_PLANILHAS.jp.includes('http')) {
-                    const csvJP = await fetchCSV(LINKS_PLANILHAS.jp);
-                    dadosJP = processCSVRows(csvJP, 'JP');
-                    preencherTabela(dadosJP, 'jp-table-body');
-                } else {
-                    console.warn("URL CSV de João Pessoa não configurada corretamente.");
+                // 1. Busca Dados Supervisores
+                if(LINKS_PLANILHAS.jp_supervisores && LINKS_PLANILHAS.jp_supervisores.includes('http')) {
+                    const csv = await fetchCSV(LINKS_PLANILHAS.jp_supervisores);
+                    dados.supervisores.jp = processCSVRows(csv, 'JP');
+                }
+                if(LINKS_PLANILHAS.pt_supervisores && LINKS_PLANILHAS.pt_supervisores.includes('http')) {
+                    const csv = await fetchCSV(LINKS_PLANILHAS.pt_supervisores);
+                    dados.supervisores.pt = processCSVRows(csv, 'PT');
                 }
 
-                if(LINKS_PLANILHAS.pt && LINKS_PLANILHAS.pt.includes('http')) {
-                    const csvPT = await fetchCSV(LINKS_PLANILHAS.pt);
-                    dadosPT = processCSVRows(csvPT, 'PT');
-                    preencherTabela(dadosPT, 'pt-table-body');
-                } else {
-                    console.warn("URL CSV de Patos não configurada corretamente.");
+                // 2. Busca Dados Fornecedores (Se houver links configurados)
+                if(LINKS_PLANILHAS.jp_fornecedores && LINKS_PLANILHAS.jp_fornecedores.includes('http')) {
+                    const csv = await fetchCSV(LINKS_PLANILHAS.jp_fornecedores);
+                    dados.fornecedores.jp = processCSVRows(csv, 'JP');
+                }
+                if(LINKS_PLANILHAS.pt_fornecedores && LINKS_PLANILHAS.pt_fornecedores.includes('http')) {
+                    const csv = await fetchCSV(LINKS_PLANILHAS.pt_fornecedores);
+                    dados.fornecedores.pt = processCSVRows(csv, 'PT');
                 }
 
-                sincronizarVisuais();
+                // Injeta a visão atual na tela
+                atualizarVisao(visaoAtual);
                 showNotification("Dados atualizados via Google Sheets!", "success");
 
             } catch (error) {
                 console.error("Erro ao buscar dados CSV:", error);
-                showNotification("Erro na leitura das planilhas. Verifique os links.", "error");
+                showNotification("Erro na leitura das planilhas.", "error");
             }
         }
 
