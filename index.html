@@ -241,7 +241,7 @@
                 </div>
 
                 <h1 class="text-2xl landscape:text-3xl fonte-titulo mb-0 text-white drop-shadow-lg">2026</h1>
-                <h2 id="data-2026" class="text-xs landscape:text-base font-bold mb-2 text-white">DIA ATUAL</h2>
+                <h2 class="text-xs landscape:text-base font-bold mb-2 text-white">19/10/2026 à 21/10/2026</h2>
                 
                 <div class="flex flex-col gap-1.5 landscape:gap-2 mb-2">
                     <div class="w-full">
@@ -274,21 +274,21 @@
             <!-- Textos 2025 (Centralizado com margens reduzidas) -->
             <div class="w-2/3 landscape:w-1/2 text-center z-10 pl-2 mt-4 landscape:mt-6">
                 <h1 class="text-2xl landscape:text-3xl fonte-titulo mb-0 text-white drop-shadow-lg">2025</h1>
-                <h2 class="text-xs landscape:text-base font-bold mb-2 text-white">14/10/2025</h2>
+                <h2 class="text-xs landscape:text-base font-bold mb-2 text-white">20/10/2025 à 22/10/2025</h2>
                 
                 <div class="flex flex-col gap-1.5 landscape:gap-2 mb-2">
                     <div class="w-full">
                         <p class="font-bold text-[9px] landscape:text-[10px] mb-0.5 uppercase tracking-wider text-white text-left">J. PESSOA</p>
                         <div class="valor-box w-full flex justify-between px-2 landscape:px-3 py-0.5">
                             <span class="text-[10px] landscape:text-xs mt-0.5">R$</span>
-                            <span id="val-jp-2025" class="text-xs landscape:text-base">1.113.405,01</span>
+                            <span id="val-jp-2025" class="text-xs landscape:text-base">7.258.865,34</span>
                         </div>
                     </div>
                     <div class="w-full">
                         <p class="font-bold text-[9px] landscape:text-[10px] mb-0.5 uppercase tracking-wider text-white text-left">PATOS</p>
                         <div class="valor-box w-full flex justify-between px-2 landscape:px-3 py-0.5">
                             <span class="text-[10px] landscape:text-xs mt-0.5">R$</span>
-                            <span id="val-pt-2025" class="text-xs landscape:text-base">571.023,90</span>
+                            <span id="val-pt-2025" class="text-xs landscape:text-base">2.549.547,36</span>
                         </div>
                     </div>
                 </div>
@@ -296,7 +296,7 @@
                 <h1 class="text-lg landscape:text-xl fonte-titulo mt-2 mb-1 text-white">TOTAL 2025</h1>
                 <div class="valor-box w-full text-center flex justify-center py-1.5">
                     <span class="mr-1 font-bold mt-0.5 text-[9px] landscape:text-xs">R$</span>
-                    <span id="total-2025" class="font-black text-sm landscape:text-lg">1.684.428,91</span>
+                    <span id="total-2025" class="font-black text-sm landscape:text-lg">9.808.412,70</span>
                 </div>
             </div>
 
@@ -502,7 +502,6 @@
             const dataStr = agora.toLocaleDateString('pt-BR');
             const horaStr = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             document.getElementById('data-extracao').textContent = `Dados sincronizados: ${dataStr} às ${horaStr}`;
-            document.getElementById('data-2026').textContent = dataStr;
         }
 
         function processCSVRows(rows, prefix) {
